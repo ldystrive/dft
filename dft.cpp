@@ -8,7 +8,7 @@
 
 using namespace std;
 
-// #define _DEGUB_
+#define _DEBUG_
 
 
 namespace dft {
@@ -306,7 +306,7 @@ namespace dft {
 	}
 
 
-	int dft(const float* src, void* dst, int height, int width, int inv)
+	int dft(const float* src, float* dst, int height, int width, int inv)
 	{
 		Complex<float> *wave;
 		int *itab;
@@ -323,14 +323,12 @@ namespace dft {
 		DFTInit(width, nf, factors, itab, wave);
 
 		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) 
-				src1d[j] = Complex<float>(src[i * width + j], 0.f);
-			fft(src1d, dst1d, width, nf, factors, itab, wave);
+			for (int j = 0; j < width; j++)
+				src1d[j] = ((Complex<float> *) src)[i * width + j]; //(src[i * width + j], 0.f);
+			fft(src1d, dst1d, width, nf, factors, itab, wave, inv);
 
 			for (int j = 0; j < width; j++) {
 				((Complex<float> *) dst)[i * width + j] = dst1d[j];
-				//dst[(i * width + j) << 1] = dst1d[j].re;
-
 			}
 		}
 
@@ -350,11 +348,14 @@ namespace dft {
 
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++)
-				src1d[j] = ((Complex<float> *) dst)[j*width + i];
-			fft(src1d, dst1d, height, nf, factors, itab, wave);
+				src1d[j] = ((Complex<float> *) dst)[j * width + i];
+			fft(src1d, dst1d, height, nf, factors, itab, wave, inv);
 			for (int j = 0; j < height; j++) {
 				((Complex<float> *) dst)[j*width + i] = dst1d[j];
-				//	dst[j * width + i] = dst1d[j];
+				if (inv) {
+					((Complex<float> *) dst)[j*width + i].re /= 1.f * width * height;
+					((Complex<float> *) dst)[j*width + i].im /= 1.f * width * height;
+				}
 			}
 		}
 		free(src1d);
@@ -364,7 +365,7 @@ namespace dft {
 		return 0;
 	}
 
-	int idft(const float* src, void* dst, int height, int width, int inv)
+	int idft(const float* src, float* dst, int height, int width, int inv)
 	{
 		return dft(src, dst, height, width, 1);
 	}
