@@ -1,15 +1,6 @@
-#include <iostream>
-#include <cstdlib>
-#include <cstring>
-#include <cassert>
-#include <fstream>
-
 #include "dft.h"
 
-using namespace std;
-
-#define _DEBUG_
-
+// #define _DEBUG_
 
 namespace dft {
 
@@ -365,7 +356,7 @@ namespace dft {
 		return 0;
 	}
 
-	int idft(const float* src, float* dst, int height, int width, int inv)
+	int idft(const float* src, float* dst, int height, int width)
 	{
 		return dft(src, dst, height, width, 1);
 	}
@@ -718,6 +709,15 @@ namespace dft {
 				w.re = t;
 			}
 		}
+	}
+	void copyMakeBorder(const float* src, float *dst, int height, int width, int M, int N)
+	{
+		for(int i = 0; i < M; i++)
+			for (int j = 0; j < N; j++) {
+				dst[i * N + j] = 0;
+				if (i < height && j < width)
+					dst[i * N + j] = src[i * width + j];
+			}
 	}
 
 }

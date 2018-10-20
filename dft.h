@@ -1,6 +1,9 @@
 #ifndef DFT_H_
 #define DFT_H_
 
+#include <iostream>
+#include <cassert>
+
 namespace dft{
 	
 	template <typename T>
@@ -11,10 +14,10 @@ namespace dft{
 	};
 
 	int getOptimalDFTSize(int n);
-	void copyMakeBorder(float* &src, int height, int width);
+	void copyMakeBorder(const float* src, float* dst, int height, int width, int M, int N);
 
 	int dft(const float* src, float* dst, int height, int width, int inv = 0);
-	int idft(const float* src, float* dst, int height, int width, int inv = 0);
+	int idft(const float* src, float* dst, int height, int width);
 }
 
 
