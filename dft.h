@@ -16,7 +16,7 @@ namespace dft{
 	int getOptimalDFTSize(int n);
 	void copyMakeBorder(const float* src, float* dst, int height, int width, int M, int N);
 
-	int dft(const float* src, float* dst, int height, int width, int inv = 0);
+	int dft(const float* src, float* dst, int height, int width);
 	int idft(const float* src, float* dst, int height, int width);
 }
 
