@@ -285,14 +285,23 @@ namespace dft {
 			n = lowbit == n ? 1 : n / lowbit;
 		}
 
-		while (n / 5 * 5 == n) {
-			factors[nf++] = 5;
-			n /= 5;
-		}
 		while (n / 3 * 3 == n) {
 			factors[nf++] = 3;
 			n /= 3;
 		}
+
+		while (n / 5 * 5 == n) {
+			factors[nf++] = 5;
+			n /= 5;
+		}
+		
+		if (n > 1)
+			factors[nf++] = n;
+
+		int f = (factors[0] & 1) == 0;
+		for (int i = f; i < (nf + f) / 2; i++)
+			std::swap(factors[i], factors[nf - i - 1 + f]);
+
 		return nf;
 	}
 
@@ -321,6 +330,7 @@ namespace dft {
 			for (int j = 0; j < width; j++) {
 				((Complex<float> *) dst)[i * width + j] = dst1d[j];
 			}
+
 		}
 
 		if (width != height) {
@@ -343,10 +353,6 @@ namespace dft {
 			fft(src1d, dst1d, height, nf, factors, itab, wave, inv);
 			for (int j = 0; j < height; j++) {
 				((Complex<float> *) dst)[j*width + i] = dst1d[j];
-				if (inv) {
-					((Complex<float> *) dst)[j*width + i].re /= 1.f * width * height;
-					((Complex<float> *) dst)[j*width + i].im /= 1.f * width * height;
-				}
 			}
 		}
 		free(src1d);
@@ -358,7 +364,60 @@ namespace dft {
 
 	int idft(const float* src, float* dst, int height, int width)
 	{
-		return dft(src, dst, height, width, 1);
+		Complex<float> *wave;
+		int *itab;
+		Complex<float> *src1d;
+		Complex<float> *dst1d;
+		int nf, factors[34];
+
+		src1d = new Complex<float>[height];
+		dst1d = new Complex<float>[height];
+		wave = new Complex<float>[height];
+		itab = new int[height];
+
+		nf = DFTFactorize(height, factors);
+		DFTInit(height, nf, factors, itab, wave);
+
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++)
+				src1d[j] = ((Complex<float> *) src)[j * width + i]; //(src[i * width + j], 0.f);
+			fft(src1d, dst1d, height, nf, factors, itab, wave, 1);
+
+			for (int j = 0; j < height; j++) {
+				((Complex<float> *) dst)[j * width + i] = dst1d[j];
+			}
+		}
+
+		if (width != height) {
+			free(src1d);
+			free(dst1d);
+			free(wave);
+			free(itab);
+
+			src1d = new Complex<float>[width];
+			dst1d = new Complex<float>[width];
+			wave = new Complex<float>[width];
+			itab = new int[width];
+			nf = DFTFactorize(width, factors);
+			DFTInit(width, nf, factors, itab, wave);
+		}
+
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++)
+				src1d[j] = ((Complex<float> *) dst)[i * width + j];
+			fft(src1d, dst1d, width, nf, factors, itab, wave, 1);
+			for (int j = 0; j < width; j++) {
+				((Complex<float> *) dst)[i*width + j] = dst1d[j];
+				((Complex<float> *) dst)[i*width + j].re /= 1.f * width * height; 
+				((Complex<float> *) dst)[i*width + j].im /= 1.f * width * height;
+			}
+		}
+		free(src1d);
+		free(dst1d);
+		free(wave);
+		free(itab);
+		return 0;
+		//return dft(src, dst, height, width, 1);
 	}
 
 	static void fft(const Complex<float> *src, Complex<float> *dst, int n, int nf, const int *factors, const int *itab, Complex<float> *wave, int inv)
